@@ -1,0 +1,10 @@
+name: StylinHats
+main: com.samoatesgames.stylinhats.StylinHats
+version: 1.0
+authors: [SamOatesPlugins]
+description: Add stylish hats to Minecraft.
+
+commands:
+    hat:
+        description: Access to the hat GUI
+        usage: /<command>
