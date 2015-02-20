@@ -36,7 +36,7 @@ public class HatCommand extends BasicCommandHandler {
     @Override
     public boolean execute(PluginCommandManager manager, CommandSender sender, String[] arguments) {
         
-        if (!manager.hasPermission(sender, this.getPermission() + ".command")) {
+        if (!manager.hasPermission(sender, "hat.command")) {
             manager.sendMessage(sender, "You don't have permission to wear a hat.");
             return true;
         }
@@ -44,7 +44,7 @@ public class HatCommand extends BasicCommandHandler {
         Player player = (Player) sender;
         
         if (arguments.length == 0) {
-            showHatsGUI(manager, player);
+            showHatsGUI(player);
             return true;
         }
         
@@ -54,11 +54,13 @@ public class HatCommand extends BasicCommandHandler {
                 return true;
             }
             
-            try {
-                int id = Integer.parseInt(arguments[0]);
-                ItemStack i = new ItemStack(id);
-                m_plugin.equiptHat(player, i.getType().name(), i.getType());
-            } catch (Exception ex) {}            
+            if (manager.hasPermission(sender, "hat.command.id")) {
+                try {
+                    int id = Integer.parseInt(arguments[0]);
+                    ItemStack i = new ItemStack(id);
+                    m_plugin.equiptHat(player, i.getType().name(), i.getType());
+                } catch (Exception ex) {}                
+            }
         }
         
         return true;        
@@ -83,10 +85,9 @@ public class HatCommand extends BasicCommandHandler {
     
     /**
      * 
-     * @param manager
      * @param sender 
      */
-    private void showHatsGUI(PluginCommandManager manager, Player player) {
+    private void showHatsGUI(Player player) {
         
         final Map<String, Hat> hats = m_plugin.getHats();
         final int noofKits = hats.size();
@@ -97,17 +98,24 @@ public class HatCommand extends BasicCommandHandler {
 
         for (Hat hat : hats.values()) {
 
-            ItemStack item = new ItemStack(hat.getIcon());
+            ItemStack item = null;
             String[] details = new String[3];
 
+            if (!player.hasPermission("hat.command." + hat.getUnlockCode().name().toLowerCase())) {
+                continue;
+            }
+            
             HatStatus status = m_plugin.canPlayerEquiptHat(player, hat);
             
             if (status.canEquipt) {
                 details[0] = ChatColor.GREEN + "Available";
-                details[1] = ChatColor.GOLD + "Left click to equipt hat";             
+                details[1] = hat.getUnlockMethod();
+                details[2] = ChatColor.GOLD + "Left click to equipt hat";     
+                item = new ItemStack(hat.getIcon());
             } else {
                 details[0] = ChatColor.RED + "Locked";
                 details[1] = hat.getUnlockMethod();
+                item = new ItemStack(Material.COAL_BLOCK);
             }
 
             inventory.addMenuItem(hat.getName(), item, details, new HatGuiCallback(m_plugin, player, hat, status));
